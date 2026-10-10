@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>OrderLint — orders by email, checked rows in your sheet</title>
+<meta name="description" content="Forward purchase orders and PDFs. AI pulls out the fields, checks every row, and adds it to your spreadsheet. Not launched yet — join the waitlist.">
+<meta name="robots" content="noindex">
+<style>
+  :root { --bg:#fbfaf7; --fg:#1d1d1b; --muted:#5f5e58; --line:#e3e0d8; --accent:#1f6f50; --accent-fg:#fff; --card:#fff; }
+  @media (prefers-color-scheme: dark) { :root { --bg:#151514; --fg:#ecebe6; --muted:#a3a19a; --line:#2e2d2a; --accent:#4fbf8c; --accent-fg:#0d1f17; --card:#1c1c1a; } }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--fg); font:17px/1.55 system-ui,-apple-system,"Segoe UI",sans-serif; }
+  main { max-width:720px; margin:0 auto; padding:48px 16px 64px; }
+  .brand { font-weight:700; letter-spacing:.02em; color:var(--accent); margin-bottom:40px; }
+  h1 { font-size:clamp(28px,6vw,44px); line-height:1.15; margin:0 0 16px; }
+  .sub { color:var(--muted); font-size:19px; margin:0 0 32px; }
+  ul.points { list-style:none; padding:0; margin:0 0 36px; display:grid; gap:12px; }
+  ul.points li { background:var(--card); border:1px solid var(--line); border-radius:10px; padding:14px 16px; }
+  .ctas { display:flex; flex-wrap:wrap; gap:12px; margin-bottom:16px; }
+  .btn { display:inline-block; padding:13px 20px; border-radius:8px; font-weight:600; text-decoration:none; cursor:pointer; border:2px solid var(--accent); font-size:16px; }
+  .btn.primary { background:var(--accent); color:var(--accent-fg); }
+  .btn.secondary { background:transparent; color:var(--accent); }
+  .note { display:none; background:var(--card); border:1px solid var(--line); border-left:4px solid var(--accent); border-radius:8px; padding:14px 16px; margin:8px 0 16px; }
+  .small { color:var(--muted); font-size:14px; margin-top:32px; }
+  .small a { color:inherit; }
+  footer { border-top:1px solid var(--line); margin-top:48px; padding-top:16px; }
+</style>
+</head>
+<body>
+<main>
+  <div class="brand">OrderLint</div>
+  <h1 id="headline"></h1>
+  <p class="sub" id="sub"></p>
+  <ul class="points">
+    <li>Will check totals, duplicates and missing fields — and, if you add your product list, wrong item codes and old prices.</li>
+    <li>Will work with any mailbox: Gmail, Outlook, anything that can forward.</li>
+    <li>Planned price: 19 USD / month for 1,000 pages. Unused pages never expire.</li>
+  </ul>
+  <div class="ctas">
+    <a class="btn primary" id="join" href="#" target="_blank" rel="noopener">Join the waitlist</a>
+    <button class="btn secondary" id="reserve" type="button">Reserve a spot at 19 USD/month</button>
+  </div>
+  <div class="note" id="reserved">
+    <strong>Not open yet — thank you.</strong> Nothing is charged. Leave your email and we will write to you first when OrderLint opens.
+    <div style="margin-top:12px"><a class="btn primary" id="reserve-join" href="#" target="_blank" rel="noopener">Leave my email</a></div>
+  </div>
+  <p class="small">We use your email only to tell you when OrderLint opens. Unsubscribe any time. Not launched yet — nothing is processed.</p>
+  <footer class="small" id="privacy">
+    <strong>Privacy.</strong> Emails are collected with Tally (EU, data stored in Europe) and used only for launch news. Visits are counted with GoatCounter, without cookies. To delete your email, write to <a id="contact" href="mailto:lukas@zyntheck.com">lukas@zyntheck.com</a>.
+  </footer>
+</main>
+<script>
+  // T4 config — filled in from the owner's own accounts before publishing
+  const TALLY_FORM = "7RB2OP";
+  const COPY = {
+    A: { h: "Orders by email → checked rows in your spreadsheet.",
+         s: "Forward purchase orders, order emails and PDFs to your own OrderLint address. AI will pull out the fields you describe in plain words, check every row, and add it to Google Sheets or your system. Only rows that look wrong will wait for you." },
+    B: { h: "Email & PDF to spreadsheet. 1,000 pages for 19 USD a month.",
+         s: "Forward emails and PDFs to your own address. Describe the fields in plain words. You will get clean rows in Google Sheets, Zapier or your own system." } };
+
+  const q = new URLSearchParams(location.search);
+  let v = (q.get("v") || "").toUpperCase();
+  if (!COPY[v]) { try { v = localStorage.getItem("ol_v"); } catch (e) {} }
+  if (!COPY[v]) v = Math.random() < 0.5 ? "A" : "B";
+  try { localStorage.setItem("ol_v", v); } catch (e) {}
+  const src = (q.get("src") || "direct").replace(/[^a-z0-9_-]/gi, "").slice(0, 30);
+
+  document.getElementById("headline").textContent = COPY[v].h;
+  document.getElementById("sub").textContent = COPY[v].s;
+  const form = intent => `https://tally.so/r/${TALLY_FORM}?variant=${v}&intent=${intent}&src=${src}`;
+  document.getElementById("join").href = form("waitlist");
+  document.getElementById("reserve-join").href = form("reserve");
+
+  function ev(name) {  // GoatCounter event; queued until count.js has loaded
+    const send = () => window.goatcounter && window.goatcounter.count && window.goatcounter.count({ path: `${name}-${v}`, title: `${name} ${v} (${src})`, event: true });
+    if (window.goatcounter && window.goatcounter.count) send(); else window.addEventListener("load", () => setTimeout(send, 300));
+  }
+  ev("view");
+  document.getElementById("join").addEventListener("click", () => ev("waitlist-click"));
+  document.getElementById("reserve").addEventListener("click", () => {
+    ev("reserve-click"); document.getElementById("reserved").style.display = "block";
+  });
+</script>
+<script data-goatcounter="https://orderlint.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
+</body>
+</html>
